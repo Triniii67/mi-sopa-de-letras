@@ -1,53 +1,213 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mi Sopa de Letras</title>
-    <style>
-        body { font-family: Arial, sans-serif; text-align: center; background: #f4f4f9; padding: 20px; }
-        h1 { color: #333; }
-        .grid { display: grid; grid-template-columns: repeat(6, 40px); gap: 5px; justify-content: center; margin: 20px auto; }
-        .cell { width: 40px; height: 40px; background: #fff; border: 2px solid #ccc; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 18px; cursor: pointer; border-radius: 5px; }
-        .cell.selected { background: #4caf50; color: white; }
-        .words { margin-top: 20px; font-size: 16px; color: #555; }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mi Sopa de Letras</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      text-align: center;
+      background-color: #f4f4f9;
+      margin: 0;
+      padding: 20px;
+    }
+    h1 { color: #333; }
+    
+    /* Grid de 10x10 adaptado a móviles */
+    #tablero {
+      display: grid;
+      grid-template-columns: repeat(10, 1fr);
+      gap: 4px;
+      max-width: 380px;
+      margin: 20px auto;
+    }
+    
+    .celda {
+      aspect-ratio: 1;
+      background-color: #fff;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: bold;
+      font-size: 1.1rem;
+      cursor: pointer;
+      user-select: none;
+    }
+    
+    .celda.marcada {
+      background-color: #4CAF50;
+      color: white;
+    }
+
+    #lista-palabras {
+      font-size: 1.1rem;
+      font-weight: bold;
+      color: #555;
+      margin-bottom: 15px;
+    }
+
+    /* Mensaje de victoria */
+    #mensaje-victoria {
+      display: none;
+      background-color: #e8f5e9;
+      border: 2px solid #4CAF50;
+      padding: 15px;
+      border-radius: 10px;
+      max-width: 350px;
+      margin: 15px auto;
+    }
+
+    button {
+      background-color: #4CAF50;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      font-size: 1rem;
+      border-radius: 5px;
+      cursor: pointer;
+      margin-top: 10px;
+    }
+    button:hover { background-color: #45a049; }
+  </style>
 </head>
 <body>
 
-    <h1>🧩 Mi Sopa de Letras</h1>
-    <p>Haz clic en las letras para seleccionar las palabras.</p>
+  🧩 <h1>Mi Sopa de Letras</h1>
+  <p>Haz clic en las letras para seleccionar las palabras.</p>
 
-    <div class="grid" id="sopa"></div>
+  <div id="lista-palabras"></div>
+  <div id="tablero"></div>
 
-    <div class="words">
-        <strong>Palabras a buscar:</strong>
-        <p>SOL | LUZ | MAR</p>
-    </div>
+  <!-- Cartel de Victoria -->
+  <div id="mensaje-victoria">
+    <h2>🎉 ¡Felicidades, lo lograste! 🎉</h2>
+    <p>¡Has encontrado todas las palabras!</p>
+    <button onclick="iniciarJuego()">Jugar otra partida</button>
+  </div>
 
-    <script>
-        const letras = [
-            ['S', 'O', 'L', 'A', 'B', 'C'],
-            ['D', 'E', 'F', 'L', 'U', 'Z'],
-            ['M', 'A', 'R', 'G', 'H', 'I'],
-            ['J', 'K', 'L', 'M', 'N', 'Ñ'],
-            ['O', 'P', 'Q', 'R', 'S', 'T'],
-            ['U', 'V', 'W', 'X', 'Y', 'Z']
-        ];
+  <button onclick="iniciarJuego()">Reiniciar Sopa de Letras</button>
 
-        const gridContainer = document.getElementById('sopa');
+  <script>
+    const bancoBases = [
+      ["SOL", "LUZ", "MAR", "NUBE", "VIENTO", "PLAYA", "ARENA", "FUEGO", "TIERRA", "AGUA"],
+      ["GATO", "PERRO", "TIGRE", "LEON", "CEBRA", "MONO", "ZORRO", "OSO", "LOBO", "PUMA"],
+      ["VERDE", "AZUL", "ROJO", "ROSA", "NEGRO", "BLANCO", "GRIS", "AMARILLO", "AMBAR", "TURQUESA"]
+    ];
 
-        letras.forEach(row => {
-            row.forEach(char => {
-                const div = document.createElement('div');
-                div.classList.add('cell');
-                div.textContent = char;
-                div.onclick = () => div.classList.toggle('selected');
-                gridContainer.appendChild(div);
-            });
-        });
-    </script>
-</bod</body>
-</ht</html>   
+    const FILAS = 10;
+    const COLUMNAS = 10;
+    let palabrasObjetivo = [];
+    let letrasMarcadas = [];
+    let palabrasEncontradas = 0;
+
+    function iniciarJuego() {
+      palabrasEncontradas = 0;
+      letrasMarcadas = [];
+      document.getElementById("mensaje-victoria").style.display = "none";
+      
+      // Seleccionar palabras aleatorias
+      const grupo = bancoBases[Math.floor(Math.random() * bancoBases.length)];
+      palabrasObjetivo = [...grupo];
+      
+      document.getElementById("lista-palabras").innerText = "Palabras: " + palabrasObjetivo.join(" | ");
+
+      // Generar tablero vacío
+      let matriz = Array(FILAS).fill(null).map(() => Array(COLUMNAS).fill(""));
+
+      // Insertar palabras en el tablero
+      palabrasObjetivo.forEach(palabra => colocarPalabra(matriz, palabra));
+
+      // Rellenar vacíos con letras aleatorias
+      const abecedario = "ABCDEFGHIJKLMNÑOPQRSTUVWXYZ";
+      for (let f = 0; f < FILAS; f++) {
+        for (let c = 0; c < COLUMNAS; c++) {
+          if (matriz[f][c] === "") {
+            matriz[f][c] = abecedario.charAt(Math.floor(Math.random() * abecedario.length));
+          }
+        }
+      }
+
+      dibujarTablero(matriz);
+    }
+
+    function colocarPalabra(matriz, palabra) {
+      let colocada = false;
+      let intentos = 0;
+      
+      // Direcciones: Horizontal (0), Vertical (1), Diagonal (2)
+      const direcciones = [[0,1], [1,0], [1,1]];
+
+      while (!colocada && intentos < 100) {
+        intentos++;
+        const dir = direcciones[Math.floor(Math.random() * direcciones.length)];
+        const filaInicio = Math.floor(Math.random() * FILAS);
+        const colInicio = Math.floor(Math.random() * COLUMNAS);
+
+        let finFila = filaInicio + dir[0] * (palabra.length - 1);
+        let finCol = colInicio + dir[1] * (palabra.length - 1);
+
+        if (finFila < FILAS && finCol < COLUMNAS) {
+          let puedeCalzar = true;
+          for (let i = 0; i < palabra.length; i++) {
+            let f = filaInicio + dir[0] * i;
+            let c = colInicio + dir[1] * i;
+            if (matriz[f][c] !== "" && matriz[f][c] !== palabra[i]) {
+              puedeCalzar = false;
+              break;
+            }
+          }
+
+          if (puedeCalzar) {
+            for (let i = 0; i < palabra.length; i++) {
+              let f = filaInicio + dir[0] * i;
+              let c = colInicio + dir[1] * i;
+              matriz[f][c] = palabra[i];
+            }
+            colocada = true;
+          }
+        }
+      }
+    }
+
+    function dibujarTablero(matriz) {
+      const contenedor = document.getElementById("tablero");
+      contenedor.innerHTML = "";
+
+      for (let f = 0; f < FILAS; f++) {
+        for (let c = 0; c < COLUMNAS; c++) {
+          const div = document.createElement("div");
+          div.classList.add("celda");
+          div.innerText = matriz[f][c];
+          div.onclick = () => seleccionarCelda(div);
+          contenedor.appendChild(div);
+        }
+      }
+    }
+
+    function seleccionarCelda(celda) {
+      celda.classList.toggle("marcada");
+      comprobarProgreso();
+    }
+
+    function comprobarProgreso() {
+      // Revisa las celdas marcadas actuales
+      const marcadas = document.querySelectorAll(".celda.marcada");
+      
+      // Condición simple de victoria: marcar suficiente cantidad de letras
+      let totalLetrasRequeridas = palabrasObjetivo.join("").length;
+      if (marcadas.length >= totalLetrasRequeridas) {
+        document.getElementById("mensaje-victoria").style.display = "block";
+      }
+    }
+
+    // Cargar juego al entrar
+    iniciarJuego();
+  </script>
+</body>
+</html>
+  
 
 
