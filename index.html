@@ -3,411 +3,246 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Mi Sopa de Letras</title>
-
+<title>Sopa de Letras</title>
 <style>
+* {
+box-sizing: border-box;
+user-select: none;
+-webkit-user-select: none;
+}
 body {
-  font-family: Arial, sans-serif;
-  text-align: center;
-  background: #f4f4f9;
-  margin: 0;
-  padding: 20px 10px 40px;
-  color: #333;
+font-family: Arial, sans-serif;
+text-align: center;
+background-color: #f4f4f9;
+margin: 0;
+padding: 10px;
+touch-action: none;
 }
-
-h1 {
-  font-size: 34px;
-  margin: 10px 0;
-}
-
-p {
-  font-size: 18px;
-}
-
+h1 { margin-bottom: 10px; }
 #palabras {
-  max-width: 600px;
-  margin: 15px auto;
-  font-weight: bold;
-  line-height: 1.8;
+margin: 10px 0;
+font-weight: bold;
+font-size: 14px;
 }
-
-#tablero {
-  display: grid;
-  grid-template-columns: repeat(12, 1fr);
-  gap: 4px;
-  max-width: 520px;
-  margin: 20px auto;
+.palabra-item {
+display: inline-block;
+margin: 2px 5px;
 }
-
+#sopa {
+display: grid;
+grid-template-columns: repeat(10, 1fr);
+gap: 3px;
+max-width: 350px;
+margin: 10px auto;
+touch-action: none;
+}
 .letra {
-  aspect-ratio: 1;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  background: white;
-  border: 2px solid #ccc;
-  border-radius: 7px;
-  font-size: clamp(13px, 4vw, 22px);
-  font-weight: bold;
-  cursor: pointer;
+aspect-ratio: 1;
+background: white;
+border: 1px solid #ccc;
+border-radius: 4px;
+display: flex;
+align-items: center;
+justify-content: center;
+font-weight: bold;
+font-size: 16px;
+cursor: pointer;
 }
-
-.letra.seleccionada {
-  background: #ffd54f;
-}
-
-.letra.encontrada {
-  background: #55b95b;
-  color: white;
-  border-color: #409646;
-}
-
+.letra.seleccionada { background-color: #ffe066; }
+.letra.encontrada { background-color: #8ce99a; }
 #mensaje {
-  display: none;
-  background: white;
-  max-width: 500px;
-  margin: 25px auto;
-  padding: 25px 15px;
-  border-radius: 18px;
-  box-shadow: 0 5px 20px #0002;
+display: none;
+font-size: 20px;
+color: green;
+font-weight: bold;
+margin-top: 15px;
 }
-
-#mensaje h2 {
-  font-size: 28px;
-}
-
 button {
-  background: #4caf50;
-  color: white;
-  border: none;
-  padding: 14px 28px;
-  border-radius: 10px;
-  font-size: 18px;
-  font-weight: bold;
-  cursor: pointer;
+padding: 10px 15px;
+font-size: 16px;
+background-color: #4caf50;
+color: white;
+border: none;
+border-radius: 5px;
+cursor: pointer;
+margin-top: 10px;
 }
 </style>
 </head>
-
 <body>
-
 <h1>🧩 Mi Sopa de Letras</h1>
-
-<p>Encuentra todas las palabras escondidas.</p>
-
 <div id="palabras"></div>
-
-<div id="tablero"></div>
-
-<div id="mensaje">
-  <h2>🎉 ¡Felicidades!</h2>
-  <p>¡Lo lograste! Encontraste todas las palabras.</p>
-  <button onclick="nuevaPartida()">🎮 Jugar de nuevo</button>
-</div>
-
+<div id="sopa"></div>
+<div id="mensaje">¡Ganaste! 🎉</div>
+<button onclick="nuevaPartida()">Nueva Partida</button>
 <script>
-
-const TAMANO = 12;
-
-const grupos = [
-  ["PLANETA","ESTRELLA","GALAXIA","COMETA","LUNA","MARTE","ESPACIO","ASTEROIDE"],
-  ["VOLCAN","BOSQUE","MONTAÑA","RIO","SELVA","LAGO","TIERRA","NATURALEZA"],
-  ["ESCUELA","CUADERNO","LAPIZ","MAESTRO","TAREA","LIBRO","CLASE","AMIGOS"],
-  ["FUTBOL","PELOTA","PORTERO","EQUIPO","CAMPEON","ESTADIO","JUGADOR","GOL"]
-];
-
-const letras = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
-
-let tablero = [];
+const listaPalabras = ["GALAXIA", "PLANETA", "ESTRELLA", "COMETA", "LUNA", "MARTE", "ESPACIO"];
+const TAMANO = 10;
 let palabras = [];
+let tablero = [];
 let encontradas = new Set();
 let inicio = null;
-let partida = 0;
-
-const direcciones = [
-  [0,1],
-  [1,0],
-  [1,1],
-  [1,-1],
-  [0,-1],
-  [-1,0],
-  [-1,-1],
-  [-1,1]
-];
-
-function nuevaSopa() {
-
-  tablero = Array.from(
-    {length:TAMANO},
-    () => Array(TAMANO).fill("")
-  );
-
-  palabras = [...grupos[partida % grupos.length]];
-  encontradas = new Set();
-  inicio = null;
-
-  for (let palabra of palabras) {
-    colocarPalabra(palabra);
-  }
-
-  for (let f=0; f<TAMANO; f++) {
-    for (let c=0; c<TAMANO; c++) {
-      if (tablero[f][c] === "") {
-        tablero[f][c] =
-          letras[Math.floor(Math.random()*letras.length)];
-      }
-    }
-  }
-
-  mostrarPalabras();
-  dibujarTablero();
-
-  document.getElementById("mensaje").style.display = "none";
-}
-
-function colocarPalabra(palabra) {
-
-  let colocada = false;
-
-  for (let intento=0; intento<1000 && !colocada; intento++) {
-
-    const direccion =
-      direcciones[Math.floor(Math.random()*direcciones.length)];
-
-    const fila =
-      Math.floor(Math.random()*TAMANO);
-
-    const columna =
-      Math.floor(Math.random()*TAMANO);
-
-    const finFila =
-      fila + direccion[0]*(palabra.length-1);
-
-    const finColumna =
-      columna + direccion[1]*(palabra.length-1);
-
-    if (
-      finFila < 0 ||
-      finFila >= TAMANO ||
-      finColumna < 0 ||
-      finColumna >= TAMANO
-    ) {
-      continue;
-    }
-
-    let puede = true;
-
-    for (let i=0; i<palabra.length; i++) {
-
-      const f = fila + direccion[0]*i;
-      const c = columna + direccion[1]*i;
-
-      if (
-        tablero[f][c] !== "" &&
-        tablero[f][c] !== palabra[i]
-      ) {
-        puede = false;
-        break;
-      }
-    }
-
-    if (!puede) continue;
-
-    for (let i=0; i<palabra.length; i++) {
-
-      const f = fila + direccion[0]*i;
-      const c = columna + direccion[1]*i;
-
-      tablero[f][c] = palabra[i];
-    }
-
-    colocada = true;
-  }
-}
-
-function mostrarPalabras() {
-
-  document.getElementById("palabras").innerHTML =
-    "Palabras: " +
-    palabras.map(p => `<span id="palabra-${p}">${p}</span>`).join(" | ");
-}
-
-function dibujarTablero() {
-
-  const contenedor =
-    document.getElementById("tablero");
-
-  contenedor.innerHTML = "";
-
-  for (let f=0; f<TAMANO; f++) {
-
-    for (let c=0; c<TAMANO; c++) {
-
-      const celda = document.createElement("div");
-
-      celda.className = "letra";
-      celda.textContent = tablero[f][c];
-
-      celda.dataset.fila = f;
-      celda.dataset.columna = c;
-
-      celda.onclick = seleccionar;
-
-      contenedor.appendChild(celda);
-    }
-  }
-}
-
-function seleccionar(evento) {
-
-  const celda = evento.currentTarget;
-
-  const fila = Number(celda.dataset.fila);
-  const columna = Number(celda.dataset.columna);
-
-  if (inicio === null) {
-
-    inicio = {
-      fila:fila,
-      columna:columna
-    };
-
-    celda.classList.add("seleccionada");
-
-  } else {
-
-    comprobarPalabra(
-      inicio,
-      {
-        fila:fila,
-        columna:columna
-      }
-    );
-
-    document
-      .querySelectorAll(".seleccionada")
-      .forEach(c => c.classList.remove("seleccionada"));
-
-    inicio = null;
-  }
-}
-
-function comprobarPalabra(a,b) {
-
-  const df = b.fila-a.fila;
-  const dc = b.columna-a.columna;
-
-  if (
-    df !== 0 &&
-    dc !== 0 &&
-    Math.abs(df) !== Math.abs(dc)
-  ) {
-    return;
-  }
-
-  const pasoF = df === 0 ? 0 : df/Math.abs(df);
-  const pasoC = dc === 0 ? 0 : dc/Math.abs(dc);
-
-  const distancia =
-    Math.max(Math.abs(df),Math.abs(dc));
-
-  let palabra = "";
-
-  for (let i=0; i<=distancia; i++) {
-
-    const f = a.fila+pasoF*i;
-    const c = a.columna+pasoC*i;
-
-    palabra += tablero[f][c];
-  }
-
-  const invertida =
-    palabra.split("").reverse().join("");
-
-  let encontrada = null;
-
-  for (let p of palabras) {
-
-    if (
-      (p === palabra || p === invertida) &&
-      !encontradas.has(p)
-    ) {
-      encontrada = p;
-      break;
-    }
-  }
-
-  if (encontrada) {
-
-    encontradas.add(encontrada);
-
-    marcar(a,b);
-
-    const texto =
-      document.getElementById("palabra-"+encontrada);
-
-    if (texto) {
-      texto.style.textDecoration = "line-through";
-      texto.style.opacity = "0.4";
-    }
-
-    if (encontradas.size === palabras.length) {
-      ganar();
-    }
-  }
-}
-
-function marcar(a, b) {
-    const df = b.fila - a.fila;
-    const dc = b.columna - a.columna;
-
-    const pasoF = df === 0 ? 0 : df / Math.abs(df);
-    const pasoC = dc === 0 ? 0 : dc / Math.abs(dc);
-
-    const distancia = Math.max(Math.abs(df), Math.abs(dc));
-
-    for (let i = 0; i <= distancia; i++) {
-        const f = a.fila + pasoF * i;
-        const c = a.columna + pasoC * i;
-
-        const letra = document.querySelector(
-            `letra[data-fila="${f}"][data-columna="${c}"]`
-        );
-
-        if (celda) {
-            celda.classList.add("encontrada");
-        }
-    }
-            }
-                                           
-
-function ganar() {
-
-  setTimeout(() => {
-
-    document.getElementById("mensaje").style.display = "block";
-
-    document.getElementById("mensaje")
-      .scrollIntoView({behavior:"smooth"});
-
-  },400);
-}
-
+let esPresionado = false;
 function nuevaPartida() {
-
-  partida++;
-
-  nuevaSopa();
-
-  window.scrollTo({
-    top:0,
-    behavior:"smooth"
-  });
+encontradas.clear();
+document.getElementById("mensaje").style.display = "none";
+palabras = [...listaPalabras].sort(() => 0.5 - Math.random()).slice(0, 4);
+const divPalabras = document.getElementById("palabras");
+divPalabras.innerHTML = "Palabras: " + palabras.map(p => <span class="palabra-item" id="palabra-${p}">${p}</span>).join(" | ");
+tablero = Array(TAMANO).fill(null).map(() => Array(TAMANO).fill(""));
+colocarPalabras();
+rellenarVacios();
+dibujarTablero();
 }
-
-nuevaSopa();
-
+function colocarPalabras() {
+for (let p of palabras) {
+let colocada = false;
+while (!colocada) {
+let dF = Math.floor(Math.random() * 3) - 1;
+let dC = Math.floor(Math.random() * 3) - 1;
+if (dF === 0 && dC === 0) continue;
+let f = Math.floor(Math.random() * TAMANO);
+let c = Math.floor(Math.random() * TAMANO);
+if (puedeColocar(p, f, c, dF, dC)) {
+for (let i = 0; i < p.length; i++) {
+tablero[f + i * dF][c + i * dC] = p[i];
+}
+colocada = true;
+}
+}
+}
+}
+function puedeColocar(p, f, c, dF, dC) {
+let finF = f + (p.length - 1) * dF;
+let finC = c + (p.length - 1) * dC;
+if (finF < 0 || finF >= TAMANO || finC < 0 || finC >= TAMANO) return false;
+for (let i = 0; i < p.length; i++) {
+let celdaActual = tablero[f + i * dF][c + i * dC];
+if (celdaActual !== "" && celdaActual !== p[i]) return false;
+}
+return true;
+}
+function rellenarVacios() {
+const letras = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+for (let f = 0; f < TAMANO; f++) {
+for (let c = 0; c < TAMANO; c++) {
+if (tablero[f][c] === "") {
+tablero[f][c] = letras[Math.floor(Math.random() * letras.length)];
+}
+}
+}
+}
+function dibujarTablero() {
+const sopa = document.getElementById("sopa");
+sopa.innerHTML = "";
+for (let f = 0; f < TAMANO; f++) {
+for (let c = 0; c < TAMANO; c++) {
+const div = document.createElement("div");
+div.className = "letra";
+div.dataset.fila = f;
+div.dataset.columna = c;
+div.innerText = tablero[f][c];
+sopa.appendChild(div);
+}
+}
+}
+function obtenerCoordenadas(e) {
+let el = e.target;
+if (e.touches && e.touches.length > 0) {
+el = document.elementFromPoint(e.touches[0].clientX, e.touches[0].clientY);
+}
+if (el && el.classList.contains("letra")) {
+return { fila: parseInt(el.dataset.fila), columna: parseInt(el.dataset.columna) };
+}
+return null;
+}
+function iniciarSeleccion(e) {
+e.preventDefault();
+const coords = obtenerCoordenadas(e);
+if (!coords) return;
+esPresionado = true;
+inicio = coords;
+limpiarSeleccion();
+marcarTemporal(inicio, inicio);
+}
+function moverSeleccion(e) {
+if (!esPresionado || !inicio) return;
+e.preventDefault();
+const coords = obtenerCoordenadas(e);
+if (coords) {
+limpiarSeleccion();
+marcarTemporal(inicio, coords);
+}
+}
+function finalSeleccion(e) {
+if (!esPresionado || !inicio) return;
+esPresionado = false;
+const coords = obtenerCoordenadas(e) || inicio;
+verificarPalabra(inicio, coords);
+limpiarSeleccion();
+inicio = null;
+}
+function marcarTemporal(a, b) {
+const df = b.fila - a.fila;
+const dc = b.columna - a.columna;
+if (df !== 0 && dc !== 0 && Math.abs(df) !== Math.abs(dc)) return;
+const pasoF = df === 0 ? 0 : df / Math.abs(df);
+const pasoC = dc === 0 ? 0 : dc / Math.abs(dc);
+const dist = Math.max(Math.abs(df), Math.abs(dc));
+for (let i = 0; i <= dist; i++) {
+let f = a.fila + pasoF * i;
+let c = a.columna + pasoC * i;
+let el = document.querySelector(.letra[data-fila="${f}"][data-columna="${c}"]);
+if (el) el.classList.add("seleccionada");
+}
+}
+function limpiarSeleccion() {
+document.querySelectorAll(".letra.seleccionada").forEach(el => el.classList.remove("seleccionada"));
+}
+function verificarPalabra(a, b) {
+const df = b.fila - a.fila;
+const dc = b.columna - a.columna;
+if (df !== 0 && dc !== 0 && Math.abs(df) !== Math.abs(dc)) return;
+const pasoF = df === 0 ? 0 : df / Math.abs(df);
+const pasoC = dc === 0 ? 0 : dc / Math.abs(dc);
+const dist = Math.max(Math.abs(df), Math.abs(dc));
+let texto = "";
+for (let i = 0; i <= dist; i++) {
+texto += tablero[a.fila + pasoF * i][a.columna + pasoC * i];
+}
+let invertido = texto.split("").reverse().join("");
+let encontrada = palabras.find(p => (p === texto || p === invertido) && !encontradas.has(p));
+if (encontrada) {
+encontradas.add(encontrada);
+marcarEncontrada(a, b);
+const item = document.getElementById(palabra-${encontrada});
+if (item) item.style.textDecoration = "line-through";
+if (encontradas.size === palabras.length) {
+document.getElementById("mensaje").style.display = "block";
+}
+}
+}
+function marcarEncontrada(a, b) {
+const df = b.fila - a.fila;
+const dc = b.columna - a.columna;
+const pasoF = df === 0 ? 0 : df / Math.abs(df);
+const pasoC = dc === 0 ? 0 : dc / Math.abs(dc);
+const dist = Math.max(Math.abs(df), Math.abs(dc));
+for (let i = 0; i <= dist; i++) {
+let f = a.fila + pasoF * i;
+let c = a.columna + pasoC * i;
+let el = document.querySelector(.letra[data-fila="${f}"][data-columna="${c}"]);
+if (el) el.classList.add("encontrada");
+}
+}
+const sopaEl = document.getElementById("sopa");
+sopaEl.addEventListener("mousedown", iniciarSeleccion);
+window.addEventListener("mousemove", moverSeleccion);
+window.addEventListener("mouseup", finalSeleccion);
+sopaEl.addEventListener("touchstart", iniciarSeleccion, { passive: false });
+window.addEventListener("touchmove", moverSeleccion, { passive: false });
+window.addEventListener("touchend", finalSeleccion);
+nuevaPartida();
 </script>
-
 </body>
-          </html>
+  </html>
