@@ -370,8 +370,8 @@ function marcar(a, b) {
         const f = a.fila + pasoF * i;
         const c = a.columna + pasoC * i;
 
-        const celda = document.querySelector(
-            `.celda[data-fila="${f}"][data-columna="${c}"]`
+        const letra = document.querySelector(
+            `letra[data-fila="${f}"][data-columna="${c}"]`
         );
 
         if (celda) {
