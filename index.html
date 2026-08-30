@@ -1,48 +1,413 @@
-          
-        dibujarTablero(matriz);
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mi Sopa de Letras</title>
+
+<style>
+body {
+  font-family: Arial, sans-serif;
+  text-align: center;
+  background: #f4f4f9;
+  margin: 0;
+  padding: 20px 10px 40px;
+  color: #333;
+}
+
+h1 {
+  font-size: 34px;
+  margin: 10px 0;
+}
+
+p {
+  font-size: 18px;
+}
+
+#palabras {
+  max-width: 600px;
+  margin: 15px auto;
+  font-weight: bold;
+  line-height: 1.8;
+}
+
+#tablero {
+  display: grid;
+  grid-template-columns: repeat(12, 1fr);
+  gap: 4px;
+  max-width: 520px;
+  margin: 20px auto;
+}
+
+.letra {
+  aspect-ratio: 1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: white;
+  border: 2px solid #ccc;
+  border-radius: 7px;
+  font-size: clamp(13px, 4vw, 22px);
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.letra.seleccionada {
+  background: #ffd54f;
+}
+
+.letra.encontrada {
+  background: #55b95b;
+  color: white;
+  border-color: #409646;
+}
+
+#mensaje {
+  display: none;
+  background: white;
+  max-width: 500px;
+  margin: 25px auto;
+  padding: 25px 15px;
+  border-radius: 18px;
+  box-shadow: 0 5px 20px #0002;
+}
+
+#mensaje h2 {
+  font-size: 28px;
+}
+
+button {
+  background: #4caf50;
+  color: white;
+  border: none;
+  padding: 14px 28px;
+  border-radius: 10px;
+  font-size: 18px;
+  font-weight: bold;
+  cursor: pointer;
+}
+</style>
+</head>
+
+<body>
+
+<h1>🧩 Mi Sopa de Letras</h1>
+
+<p>Encuentra todas las palabras escondidas.</p>
+
+<div id="palabras"></div>
+
+<div id="tablero"></div>
+
+<div id="mensaje">
+  <h2>🎉 ¡Felicidades!</h2>
+  <p>¡Lo lograste! Encontraste todas las palabras.</p>
+  <button onclick="nuevaPartida()">🎮 Jugar de nuevo</button>
+</div>
+
+<script>
+
+const TAMANO = 12;
+
+const grupos = [
+  ["PLANETA","ESTRELLA","GALAXIA","COMETA","LUNA","MARTE","ESPACIO","ASTEROIDE"],
+  ["VOLCAN","BOSQUE","MONTAÑA","RIO","SELVA","LAGO","TIERRA","NATURALEZA"],
+  ["ESCUELA","CUADERNO","LAPIZ","MAESTRO","TAREA","LIBRO","CLASE","AMIGOS"],
+  ["FUTBOL","PELOTA","PORTERO","EQUIPO","CAMPEON","ESTADIO","JUGADOR","GOL"]
+];
+
+const letras = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+
+let tablero = [];
+let palabras = [];
+let encontradas = new Set();
+let inicio = null;
+let partida = 0;
+
+const direcciones = [
+  [0,1],
+  [1,0],
+  [1,1],
+  [1,-1],
+  [0,-1],
+  [-1,0],
+  [-1,-1],
+  [-1,1]
+];
+
+function nuevaSopa() {
+
+  tablero = Array.from(
+    {length:TAMANO},
+    () => Array(TAMANO).fill("")
+  );
+
+  palabras = [...grupos[partida % grupos.length]];
+  encontradas = new Set();
+  inicio = null;
+
+  for (let palabra of palabras) {
+    colocarPalabra(palabra);
+  }
+
+  for (let f=0; f<TAMANO; f++) {
+    for (let c=0; c<TAMANO; c++) {
+      if (tablero[f][c] === "") {
+        tablero[f][c] =
+          letras[Math.floor(Math.random()*letras.length)];
+      }
+    }
+  }
+
+  mostrarPalabras();
+  dibujarTablero();
+
+  document.getElementById("mensaje").style.display = "none";
+}
+
+function colocarPalabra(palabra) {
+
+  let colocada = false;
+
+  for (let intento=0; intento<1000 && !colocada; intento++) {
+
+    const direccion =
+      direcciones[Math.floor(Math.random()*direcciones.length)];
+
+    const fila =
+      Math.floor(Math.random()*TAMANO);
+
+    const columna =
+      Math.floor(Math.random()*TAMANO);
+
+    const finFila =
+      fila + direccion[0]*(palabra.length-1);
+
+    const finColumna =
+      columna + direccion[1]*(palabra.length-1);
+
+    if (
+      finFila < 0 ||
+      finFila >= TAMANO ||
+      finColumna < 0 ||
+      finColumna >= TAMANO
+    ) {
+      continue;
     }
 
-    function colocarPalabra(matriz, palabra) {
-      let colocada = false;
-      let intentos = 0;
-      
-      // Direcciones: Horizontal (0), Vertical (1), Diagonal (2)
-      const direcciones = [[0,1], [1,0], [1,1]];
+    let puede = true;
 
-      while (!colocada && intentos < 100) {
-        intentos++;
-        const dir = direcciones[Math.floor(Math.random() * direcciones.length)];
-        const filaInicio = Math.floor(Math.random() * FILAS);
-        const colInicio = Math.floor(Math.random() * COLUMNAS);
+    for (let i=0; i<palabra.length; i++) {
 
-        let finFila = filaInicio + dir[0] * (palabra.length - 1);
-        let finCol = colInicio + dir[1] * (palabra.length - 1);
+      const f = fila + direccion[0]*i;
+      const c = columna + direccion[1]*i;
 
-        if (finFila < FILAS && finCol < COLUMNAS) {
-          let puedeCalzar = true;
-          for (let i = 0; i < palabra.length; i++) {
-            let f = filaInicio + dir[0] * i;
-            let c = colInicio + dir[1] * i;
-            if (matriz[f][c] !== "" && matriz[f][c] !== palabra[i]) {
-              puedeCalzar = false;
-              break;
-            }
-          }
+      if (
+        tablero[f][c] !== "" &&
+        tablero[f][c] !== palabra[i]
+      ) {
+        puede = false;
+        break;
+      }
+    }
 
-          if (puedeCalzar) {
-            for (let i = 0; i < palabra.length; i++) {
-              let f = filaInicio + dir[0] * i;
-              let c = colInicio + dir[1] * i;
-              matriz[f][c] = palabra[i];
-            }
-            colocada = true;
-          }
+    if (!puede) continue;
+
+    for (let i=0; i<palabra.length; i++) {
+
+      const f = fila + direccion[0]*i;
+      const c = columna + direccion[1]*i;
+
+      tablero[f][c] = palabra[i];
+    }
+
+    colocada = true;
+  }
+}
+
+function mostrarPalabras() {
+
+  document.getElementById("palabras").innerHTML =
+    "Palabras: " +
+    palabras.map(p => `<span id="palabra-${p}">${p}</span>`).join(" | ");
+}
+
+function dibujarTablero() {
+
+  const contenedor =
+    document.getElementById("tablero");
+
+  contenedor.innerHTML = "";
+
+  for (let f=0; f<TAMANO; f++) {
+
+    for (let c=0; c<TAMANO; c++) {
+
+      const celda = document.createElement("div");
+
+      celda.className = "letra";
+      celda.textContent = tablero[f][c];
+
+      celda.dataset.fila = f;
+      celda.dataset.columna = c;
+
+      celda.onclick = seleccionar;
+
+      contenedor.appendChild(celda);
+    }
+  }
+}
+
+function seleccionar(evento) {
+
+  const celda = evento.currentTarget;
+
+  const fila = Number(celda.dataset.fila);
+  const columna = Number(celda.dataset.columna);
+
+  if (inicio === null) {
+
+    inicio = {
+      fila:fila,
+      columna:columna
+    };
+
+    celda.classList.add("seleccionada");
+
+  } else {
+
+    comprobarPalabra(
+      inicio,
+      {
+        fila:fila,
+        columna:columna
+      }
+    );
+
+    document
+      .querySelectorAll(".seleccionada")
+      .forEach(c => c.classList.remove("seleccionada"));
+
+    inicio = null;
+  }
+}
+
+function comprobarPalabra(a,b) {
+
+  const df = b.fila-a.fila;
+  const dc = b.columna-a.columna;
+
+  if (
+    df !== 0 &&
+    dc !== 0 &&
+    Math.abs(df) !== Math.abs(dc)
+  ) {
+    return;
+  }
+
+  const pasoF = df === 0 ? 0 : df/Math.abs(df);
+  const pasoC = dc === 0 ? 0 : dc/Math.abs(dc);
+
+  const distancia =
+    Math.max(Math.abs(df),Math.abs(dc));
+
+  let palabra = "";
+
+  for (let i=0; i<=distancia; i++) {
+
+    const f = a.fila+pasoF*i;
+    const c = a.columna+pasoC*i;
+
+    palabra += tablero[f][c];
+  }
+
+  const invertida =
+    palabra.split("").reverse().join("");
+
+  let encontrada = null;
+
+  for (let p of palabras) {
+
+    if (
+      (p === palabra || p === invertida) &&
+      !encontradas.has(p)
+    ) {
+      encontrada = p;
+      break;
+    }
+  }
+
+  if (encontrada) {
+
+    encontradas.add(encontrada);
+
+    marcar(a,b);
+
+    const texto =
+      document.getElementById("palabra-"+encontrada);
+
+    if (texto) {
+      texto.style.textDecoration = "line-through";
+      texto.style.opacity = "0.4";
+    }
+
+    if (encontradas.size === palabras.length) {
+      ganar();
+    }
+  }
+}
+
+function marcar(a, b) {
+    const df = b.fila - a.fila;
+    const dc = b.columna - a.columna;
+
+    const pasoF = df === 0 ? 0 : df / Math.abs(df);
+    const pasoC = dc === 0 ? 0 : dc / Math.abs(dc);
+
+    const distancia = Math.max(Math.abs(df), Math.abs(dc));
+
+    for (let i = 0; i <= distancia; i++) {
+        const f = a.fila + pasoF * i;
+        const c = a.columna + pasoC * i;
+
+        const celda = document.querySelector(
+            `.celda[data-fila="${f}"][data-columna="${c}"]`
+        );
+
+        if (celda) {
+            celda.classList.add("encontrada");
         }
+    }
+            }
+                                           
 
-  
+function ganar() {
 
+  setTimeout(() => {
 
+    document.getElementById("mensaje").style.display = "block";
 
-      
+    document.getElementById("mensaje")
+      .scrollIntoView({behavior:"smooth"});
 
-      
+  },400);
+}
+
+function nuevaPartida() {
+
+  partida++;
+
+  nuevaSopa();
+
+  window.scrollTo({
+    top:0,
+    behavior:"smooth"
+  });
+}
+
+nuevaSopa();
+
+</script>
+
+</body>
+          </html>
