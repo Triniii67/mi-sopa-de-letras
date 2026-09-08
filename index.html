@@ -3,58 +3,64 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Sopa de Letras Aleatoria</title>
+  <title>Sopa de Letras</title>
   <style>
+    * { box-sizing: border-box; }
     body {
-      font-family: Arial, sans-serif;
+      font-family: system-ui, -apple-system, sans-serif;
       text-align: center;
-      background-color: #f4f4f9;
-      margin: 20px;
+      background-color: #f8f9fa;
+      margin: 0;
+      padding: 15px;
     }
 
+    h1 { margin-top: 10px; font-size: 28px; }
+
     #mensaje-victoria {
-      font-size: 26px;
+      font-size: 22px;
       font-weight: bold;
       color: #2e7d32;
-      height: 35px;
+      min-height: 30px;
       margin-bottom: 10px;
     }
 
     #palabras-lista {
-      margin: 15px auto;
-      max-width: 450px;
       display: flex;
+      flex-wrap: wrap;
       justify-content: center;
-      gap: 15px;
-      font-weight: bold;
+      gap: 8px;
+      margin: 15px auto;
+      max-width: 360px;
     }
 
     .palabra-item {
-      padding: 5px 10px;
-      background: #e0e0e0;
-      border-radius: 4px;
+      padding: 6px 12px;
+      background: #e9ecef;
+      border-radius: 16px;
+      font-size: 14px;
+      font-weight: bold;
+      color: #495057;
     }
 
     .palabra-item.tachada {
       text-decoration: line-through;
-      background: #a5d6a7;
+      background: #2e7d32;
       color: white;
     }
 
-    /* Grid dinámico de 10x10 */
+    /* Grid adaptable a móviles */
     #sopa-grid {
       display: grid;
-      grid-template-columns: repeat(10, 38px);
+      grid-template-columns: repeat(8, 1fr);
       gap: 4px;
-      justify-content: center;
+      max-width: 360px;
       margin: 20px auto;
     }
 
     .celda {
-      width: 38px;
-      height: 38px;
+      aspect-ratio: 1;
       background-color: #ffffff;
-      border: 2px solid #ccc;
+      border: 1px solid #ced4da;
       font-size: 18px;
       font-weight: bold;
       display: flex;
@@ -62,30 +68,35 @@
       justify-content: center;
       cursor: pointer;
       user-select: none;
-      border-radius: 4px;
+      border-radius: 6px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
     }
 
     .celda.seleccionada {
       background-color: #ffe082;
+      border-color: #ffa000;
     }
 
     .celda.encontrada {
       background-color: #4caf50;
       color: white;
+      border-color: #2e7d32;
     }
 
     button {
-      padding: 10px 20px;
+      padding: 12px 24px;
       font-size: 16px;
+      font-weight: bold;
       cursor: pointer;
       background-color: #007bff;
       color: white;
       border: none;
-      border-radius: 5px;
+      border-radius: 8px;
+      box-shadow: 0 2px 4px rgba(0,123,255,0.3);
     }
 
-    button:hover {
-      background-color: #0056b3;
+    button:active {
+      transform: scale(0.98);
     }
   </style>
 </head>
@@ -99,167 +110,137 @@
 
   <div id="sopa-grid"></div>
 
-  <button onclick="nuevoJuego()">Jugar de nuevo</button>
+  <button onclick="nuevoJuego()">✨Jugar de nuevo✨</button>
 
   <script>
-    // Banco amplio de palabras
-    const BANCO_PALABRAS = [
-      "TOPH "BEIFONG", "GATO", "ZUKO", "CASA", "ARBOL", "PLAYA", 
-      "FLOR", "LIBRO", "FUEGO", "TIGRE", "AGUA", "PIANO", "NUBE"
-    ];
+    const BANCO = ["TOPH", "BEIFONG", "ZUKO", "LUNA", "MAR", "FLOR", "PAN", "RED", "PEZ", "LUZ"];
+    const TAMANO = 8;
+    const CANTIDAD = 3;
 
-    const TAMANO = 10;
-    const CANTIDAD_PALABRAS = 4; // Palabras por partida
-    
     let tablero = [];
-    let palabrasPartida = [];
-    let palabrasEncontradas = [];
+    let palabrasActuales = [];
+    let encontradas = [];
     let seleccionadas = [];
 
     function nuevoJuego() {
       document.getElementById('mensaje-victoria').innerText = '';
-      palabrasEncontradas = [];
+      encontradas = [];
       seleccionadas = [];
-      
-      // 1. Seleccionar palabras al azar del banco
-      const copiaBanco = [...BANCO_PALABRAS].sort(() => 0.5 - Math.random());
-      palabrasPartida = copiaBanco.slice(0, CANTIDAD_PALABRAS);
 
-      // 2. Crear matriz vacía
+      // Selección aleatoria limpia
+      const copia = [...BANCO].sort(() => Math.random() - 0.5);
+      palabrasActuales = copia.filter(p => p.length <= TAMANO).slice(0, CANTIDAD);
+
+      // Crear matriz vacía
       tablero = Array(TAMANO).fill(null).map(() => Array(TAMANO).fill(''));
 
-      // 3. Insertar palabras en la matriz
-      palabrasPartida.forEach(palabra => colocarPalabra(palabra));
+      // Colocar palabras
+      palabrasActuales.forEach(p => colocarPalabra(p));
 
-      // 4. Rellenar espacios vacíos con letras aleatorias
-      const abecedario = "ABCDEFGHIJKLMNÑOPQRSTUVWXYZ";
+      // Rellenar vacíos
+      const abc = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
       for (let r = 0; r < TAMANO; r++) {
         for (let c = 0; c < TAMANO; c++) {
-          if (tablero[r][c] === '') {
-            tablero[r][c] = abecedario[Math.floor(Math.random() * abecedario.length)];
+          if (!tablero[r][c]) {
+            tablero[r][c] = abc[Math.floor(Math.random() * abc.length)];
           }
         }
       }
 
-      renderizarListaPalabras();
+      renderizarLista();
       renderizarTablero();
     }
 
-    function colocarPalabra(palabra) {
-      const direcciones = [
-        [0, 1],  // Horizontal
-        [1, 0],  // Vertical
-        [1, 1]   // Diagonal
-      ];
-      
+    function colocarPalabra(p) {
       let colocada = false;
       let intentos = 0;
-
-      while (!colocada && intentos < 100) {
+      
+      while (!colocada && intentos < 50) {
         intentos++;
-        const dir = direcciones[Math.floor(Math.random() * direcciones.length)];
-        const filaInicio = Math.floor(Math.random() * TAMANO);
-        const colInicio = Math.floor(Math.random() * TAMANO);
+        const horiz = Math.random() > 0.5;
+        const r = Math.floor(Math.random() * (horiz ? TAMANO : TAMANO - p.length));
+        const c = Math.floor(Math.random() * (horiz ? TAMANO - p.length : TAMANO));
 
-        const finFila = filaInicio + dir[0] * (palabra.length - 1);
-        const finCol = colInicio + dir[1] * (palabra.length - 1);
-
-        if (finFila < TAMANO && finCol < TAMANO) {
-          let sePuede = true;
-          for (let i = 0; i < palabra.length; i++) {
-            const r = filaInicio + dir[0] * i;
-            const c = colInicio + dir[1] * i;
-            if (tablero[r][c] !== '' && tablero[r][c] !== palabra[i]) {
-              sePuede = false;
-              break;
-            }
+        let cabe = true;
+        for (let i = 0; i < p.length; i++) {
+          const char = tablero[horiz ? r : r + i][horiz ? c + i : c];
+          if (char !== '' && char !== p[i]) {
+            cabe = false;
+            break;
           }
+        }
 
-          if (sePuede) {
-            for (let i = 0; i < palabra.length; i++) {
-              const r = filaInicio + dir[0] * i;
-              const c = colInicio + dir[1] * i;
-              tablero[r][c] = palabra[i];
-            }
-            colocada = true;
+        if (cabe) {
+          for (let i = 0; i < p.length; i++) {
+            tablero[horiz ? r : r + i][horiz ? c + i : c] = p[i];
           }
+          colocada = true;
         }
       }
     }
 
-    function renderizarListaPalabras() {
-      const listaElem = document.getElementById('palabras-lista');
-      listaElem.innerHTML = '';
-      palabrasPartida.forEach(p => {
-        const item = document.createElement('span');
-        item.classList.add('palabra-item');
-        item.id = `palabra-${p}`;
-        item.innerText = p;
-        listaElem.appendChild(item);
-      });
+    function renderizarLista() {
+      const el = document.getElementById('palabras-lista');
+      el.innerHTML = palabrasActuales
+        .map(p => `<span class="palabra-item" id="p-${p}">${p}</span>`)
+        .join('');
     }
 
     function renderizarTablero() {
       const grid = document.getElementById('sopa-grid');
       grid.innerHTML = '';
-
+      
       for (let r = 0; r < TAMANO; r++) {
         for (let c = 0; c < TAMANO; c++) {
-          const celda = document.createElement('div');
-          celda.classList.add('celda');
-          celda.innerText = tablero[r][c];
-          celda.dataset.row = r;
-          celda.dataset.col = c;
-          celda.addEventListener('click', () => clickCelda(celda, r, c));
-          grid.appendChild(celda);
+          const div = document.createElement('div');
+          div.className = 'celda';
+          div.innerText = tablero[r][c];
+          div.onclick = () => tocarCelda(div, r, c);
+          grid.appendChild(div);
         }
       }
     }
 
-    function clickCelda(celda, r, c) {
-      if (celda.classList.contains('encontrada')) return;
+    function tocarCelda(elem, r, c) {
+      if (elem.classList.contains('encontrada')) return;
 
       const idx = seleccionadas.findIndex(s => s.r === r && s.c === c);
       if (idx >= 0) {
         seleccionadas.splice(idx, 1);
-        celda.classList.remove('seleccionada');
+        elem.classList.remove('seleccionada');
       } else {
-        seleccionadas.push({ r, c, letra: tablero[r][c], elem: celda });
-        celda.classList.add('seleccionada');
+        seleccionadas.push({ r, c, letra: tablero[r][c], elem });
+        elem.classList.add('seleccionada');
       }
 
-      verificarPalabras();
+      verificar();
     }
 
-    function verificarPalabras() {
-      const textoSeleccionado = seleccionadas.map(s => s.letra).join('');
-      const textoInvertido = textoSeleccionado.split('').reverse().join('');
+    function verificar() {
+      const str = seleccionadas.map(s => s.letra).join('');
+      const strRev = str.split('').reverse().join('');
 
-      palabrasPartida.forEach(palabra => {
-        if (!palabrasEncontradas.includes(palabra)) {
-          if (textoSeleccionado === palabra || textoInvertido === palabra) {
-            // Palabra encontrada
-            palabrasEncontradas.push(palabra);
-            document.getElementById(`palabra-${palabra}`).classList.add('tachada');
+      palabrasActuales.forEach(p => {
+        if (!encontradas.includes(p) && (str === p || strRev === p)) {
+          encontradas.push(p);
+          document.getElementById(`p-${p}`).classList.add('tachada');
+          
+          seleccionadas.forEach(s => {
+            s.elem.classList.remove('seleccionada');
+            s.elem.classList.add('encontrada');
+          });
+          
+          seleccionadas = [];
 
-            seleccionadas.forEach(s => {
-              s.elem.classList.remove('seleccionada');
-              s.elem.classList.add('encontrada');
-            });
-
-            seleccionadas = [];
-
-            // Verificar si ganó todas las palabras
-            if (palabrasEncontradas.length === palabrasPartida.length) {
-              document.getElementById('mensaje-victoria').innerText = "¡Ganaste!🎉";
-            }
+          if (encontradas.length === palabrasActuales.length) {
+            document.getElementById('mensaje-victoria').innerText = "¡Ganaste!🎉";
           }
         }
       });
     }
 
-    // Iniciar automáticamente al cargar
-    nuevoJuego();
+    // Carga inicial
+    window.onload = nuevoJuego;
   </script>
 </body>
 </html>
