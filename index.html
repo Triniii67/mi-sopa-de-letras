@@ -76,173 +76,372 @@ margin-top: 10px;
 <div id="mensaje">¡Ganaste! 🎉</div>
 <button onclick="nuevaPartida()">✨ Jugar otra ronda ✨</button>
 <script>
-const listaPalabras = const listaPalabras = ["GALAXIA", "PLANETA", "ESTRELLA", "COMETA", "LUNA", "MARTE", "ESPACIO", "TIERRA", "OCEANO", "BOSQUE", "VOLCAN", "NUBE", "VIENTO", "ARENA", "FUEGO"];
+const listaPalabras = [
+  "TOPH",
+  "BEIFONG",
+  "ESTRELLA",
+  "COMETA",
+  "LUNA",
+  "MARTE",
+  "ESPACIO",
+  "TIERRA",
+  "OCEANO",
+  "BOSQUE",
+  "VOLCAN",
+  "NUBE",
+  "VIENTO",
+  "ARENA",
+  "FUEGO"
+];
+
 const TAMANO = 10;
+
 let palabras = [];
 let tablero = [];
 let encontradas = new Set();
 let inicio = null;
 let esPresionado = false;
+
 function nuevaPartida() {
-encontradas.clear();
-document.getElementById("mensaje").style.display = "none";
-palabras = [...listaPalabras].sort(() => 0.5 - Math.random()).slice(0, 4);
-const divPalabras = document.getElementById("palabras");
-divPalabras.innerHTML = "Palabras: " + palabras.map(p => <span class="palabra-item" id="palabra-${p}">${p}</span>).join(" | ");
-tablero = Array(TAMANO).fill(null).map(() => Array(TAMANO).fill(""));
-colocarPalabras();
-rellenarVacios();
-dibujarTablero();
+  encontradas.clear();
+  inicio = null;
+  esPresionado = false;
+
+  document.getElementById("mensaje").style.display = "none";
+
+  palabras = [...listaPalabras]
+    .sort(() => Math.random() - 0.5)
+    .slice(0, 4);
+
+  const divPalabras = document.getElementById("palabras");
+
+  divPalabras.innerHTML =
+    "Palabras: " +
+    palabras
+      .map(
+        p =>
+          `<span class="palabra-item" id="palabra-${p}">${p}</span>`
+      )
+      .join(" | ");
+
+  tablero = Array.from(
+    { length: TAMANO },
+    () => Array(TAMANO).fill("")
+  );
+
+  colocarPalabras();
+  rellenarVacios();
+  dibujarTablero();
 }
+
 function colocarPalabras() {
-for (let p of palabras) {
-let colocada = false;
-while (!colocada) {
-let dF = Math.floor(Math.random() * 3) - 1;
-let dC = Math.floor(Math.random() * 3) - 1;
-if (dF === 0 && dC === 0) continue;
-let f = Math.floor(Math.random() * TAMANO);
-let c = Math.floor(Math.random() * TAMANO);
-if (puedeColocar(p, f, c, dF, dC)) {
-for (let i = 0; i < p.length; i++) {
-tablero[f + i * dF][c + i * dC] = p[i];
+  for (const palabra of palabras) {
+    let colocada = false;
+
+    while (!colocada) {
+      const dF = Math.floor(Math.random() * 3) - 1;
+      const dC = Math.floor(Math.random() * 3) - 1;
+
+      if (dF === 0 && dC === 0) continue;
+
+      const f = Math.floor(Math.random() * TAMANO);
+      const c = Math.floor(Math.random() * TAMANO);
+
+      if (puedeColocar(palabra, f, c, dF, dC)) {
+        for (let i = 0; i < palabra.length; i++) {
+          tablero[f + i * dF][c + i * dC] = palabra[i];
+        }
+
+        colocada = true;
+      }
+    }
+  }
 }
-colocada = true;
+
+function puedeColocar(palabra, f, c, dF, dC) {
+  const finF = f + (palabra.length - 1) * dF;
+  const finC = c + (palabra.length - 1) * dC;
+
+  if (
+    finF < 0 ||
+    finF >= TAMANO ||
+    finC < 0 ||
+    finC >= TAMANO
+  ) {
+    return false;
+  }
+
+  for (let i = 0; i < palabra.length; i++) {
+    const celda = tablero[f + i * dF][c + i * dC];
+
+    if (celda !== "" && celda !== palabra[i]) {
+      return false;
+    }
+  }
+
+  return true;
 }
-}
-}
-}
-function puedeColocar(p, f, c, dF, dC) {
-let finF = f + (p.length - 1) * dF;
-let finC = c + (p.length - 1) * dC;
-if (finF < 0 || finF >= TAMANO || finC < 0 || finC >= TAMANO) return false;
-for (let i = 0; i < p.length; i++) {
-let celdaActual = tablero[f + i * dF][c + i * dC];
-if (celdaActual !== "" && celdaActual !== p[i]) return false;
-}
-return true;
-}
+
 function rellenarVacios() {
-const letras = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
-for (let f = 0; f < TAMANO; f++) {
-for (let c = 0; c < TAMANO; c++) {
-if (tablero[f][c] === "") {
-tablero[f][c] = letras[Math.floor(Math.random() * letras.length)];
+  const letras = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+
+  for (let f = 0; f < TAMANO; f++) {
+    for (let c = 0; c < TAMANO; c++) {
+      if (tablero[f][c] === "") {
+        tablero[f][c] =
+          letras[Math.floor(Math.random() * letras.length)];
+      }
+    }
+  }
 }
-}
-}
-}
+
 function dibujarTablero() {
-const sopa = document.getElementById("sopa");
-sopa.innerHTML = "";
-for (let f = 0; f < TAMANO; f++) {
-for (let c = 0; c < TAMANO; c++) {
-const div = document.createElement("div");
-div.className = "letra";
-div.dataset.fila = f;
-div.dataset.columna = c;
-div.innerText = tablero[f][c];
-sopa.appendChild(div);
+  const sopa = document.getElementById("sopa");
+
+  sopa.innerHTML = "";
+
+  for (let f = 0; f < TAMANO; f++) {
+    for (let c = 0; c < TAMANO; c++) {
+      const div = document.createElement("div");
+
+      div.className = "letra";
+      div.dataset.fila = f;
+      div.dataset.columna = c;
+      div.innerText = tablero[f][c];
+
+      sopa.appendChild(div);
+    }
+  }
 }
-}
-}
+
 function obtenerCoordenadas(e) {
-let el = e.target;
-if (e.touches && e.touches.length > 0) {
-el = document.elementFromPoint(e.touches[0].clientX, e.touches[0].clientY);
+  let el = e.target;
+
+  if (e.touches && e.touches.length > 0) {
+    const touch = e.touches[0];
+
+    el = document.elementFromPoint(
+      touch.clientX,
+      touch.clientY
+    );
+  }
+
+  if (el && el.classList.contains("letra")) {
+    return {
+      fila: parseInt(el.dataset.fila),
+      columna: parseInt(el.dataset.columna)
+    };
+  }
+
+  return null;
 }
-if (el && el.classList.contains("letra")) {
-return { fila: parseInt(el.dataset.fila), columna: parseInt(el.dataset.columna) };
-}
-return null;
-}
+
 function iniciarSeleccion(e) {
-e.preventDefault();
-const coords = obtenerCoordenadas(e);
-if (!coords) return;
-esPresionado = true;
-inicio = coords;
-limpiarSeleccion();
-marcarTemporal(inicio, inicio);
+  e.preventDefault();
+
+  const coords = obtenerCoordenadas(e);
+
+  if (!coords) return;
+
+  esPresionado = true;
+  inicio = coords;
+
+  limpiarSeleccion();
+  marcarTemporal(inicio, inicio);
 }
+
 function moverSeleccion(e) {
-if (!esPresionado || !inicio) return;
-e.preventDefault();
-const coords = obtenerCoordenadas(e);
-if (coords) {
-limpiarSeleccion();
-marcarTemporal(inicio, coords);
+  if (!esPresionado || !inicio) return;
+
+  e.preventDefault();
+
+  const coords = obtenerCoordenadas(e);
+
+  if (coords) {
+    limpiarSeleccion();
+    marcarTemporal(inicio, coords);
+  }
 }
-}
+
 function finalSeleccion(e) {
-if (!esPresionado || !inicio) return;
-esPresionado = false;
-const coords = obtenerCoordenadas(e) || inicio;
-verificarPalabra(inicio, coords);
-limpiarSeleccion();
-inicio = null;
+  if (!esPresionado || !inicio) return;
+
+  e.preventDefault();
+
+  esPresionado = false;
+
+  const coords = obtenerCoordenadas(e) || inicio;
+
+  verificarPalabra(inicio, coords);
+
+  limpiarSeleccion();
+
+  inicio = null;
 }
+
 function marcarTemporal(a, b) {
-const df = b.fila - a.fila;
-const dc = b.columna - a.columna;
-if (df !== 0 && dc !== 0 && Math.abs(df) !== Math.abs(dc)) return;
-const pasoF = df === 0 ? 0 : df / Math.abs(df);
-const pasoC = dc === 0 ? 0 : dc / Math.abs(dc);
-const dist = Math.max(Math.abs(df), Math.abs(dc));
-for (let i = 0; i <= dist; i++) {
-let f = a.fila + pasoF * i;
-let c = a.columna + pasoC * i;
-let el = document.querySelector(.letra[data-fila="${f}"][data-columna="${c}"]);
-if (el) el.classList.add("seleccionada");
+  const df = b.fila - a.fila;
+  const dc = b.columna - a.columna;
+
+  if (
+    df !== 0 &&
+    dc !== 0 &&
+    Math.abs(df) !== Math.abs(dc)
+  ) {
+    return;
+  }
+
+  const pasoF = df === 0 ? 0 : df / Math.abs(df);
+  const pasoC = dc === 0 ? 0 : dc / Math.abs(dc);
+
+  const distancia = Math.max(
+    Math.abs(df),
+    Math.abs(dc)
+  );
+
+  for (let i = 0; i <= distancia; i++) {
+    const f = a.fila + pasoF * i;
+    const c = a.columna + pasoC * i;
+
+    const el = document.querySelector(
+      `.letra[data-fila="${f}"][data-columna="${c}"]`
+    );
+
+    if (el) {
+      el.classList.add("seleccionada");
+    }
+  }
 }
-}
+
 function limpiarSeleccion() {
-document.querySelectorAll(".letra.seleccionada").forEach(el => el.classList.remove("seleccionada"));
+  document
+    .querySelectorAll(".letra.seleccionada")
+    .forEach(el => {
+      el.classList.remove("seleccionada");
+    });
 }
+
 function verificarPalabra(a, b) {
-const df = b.fila - a.fila;
-const dc = b.columna - a.columna;
-if (df !== 0 && dc !== 0 && Math.abs(df) !== Math.abs(dc)) return;
-const pasoF = df === 0 ? 0 : df / Math.abs(df);
-const pasoC = dc === 0 ? 0 : dc / Math.abs(dc);
-const dist = Math.max(Math.abs(df), Math.abs(dc));
-let texto = "";
-for (let i = 0; i <= dist; i++) {
-texto += tablero[a.fila + pasoF * i][a.columna + pasoC * i];
+  const df = b.fila - a.fila;
+  const dc = b.columna - a.columna;
+
+  if (
+    df !== 0 &&
+    dc !== 0 &&
+    Math.abs(df) !== Math.abs(dc)
+  ) {
+    return;
+  }
+
+  const pasoF = df === 0 ? 0 : df / Math.abs(df);
+  const pasoC = dc === 0 ? 0 : dc / Math.abs(dc);
+
+  const distancia = Math.max(
+    Math.abs(df),
+    Math.abs(dc)
+  );
+
+  let texto = "";
+
+  for (let i = 0; i <= distancia; i++) {
+    texto += tablero[
+      a.fila + pasoF * i
+    ][
+      a.columna + pasoC * i
+    ];
+  }
+
+  const invertido = texto
+    .split("")
+    .reverse()
+    .join("");
+
+  const encontrada = palabras.find(
+    p =>
+      (p === texto || p === invertido) &&
+      !encontradas.has(p)
+  );
+
+  if (!encontrada) return;
+
+  encontradas.add(encontrada);
+
+  marcarEncontrada(a, b);
+
+  const item = document.getElementById(
+    `palabra-${encontrada}`
+  );
+
+  if (item) {
+    item.style.textDecoration = "line-through";
+  }
+
+  if (encontradas.size === palabras.length) {
+    document.getElementById("mensaje").style.display =
+      "block";
+  }
 }
-let invertido = texto.split("").reverse().join("");
-let encontrada = palabras.find(p => (p === texto || p === invertido) && !encontradas.has(p));
-if (encontrada) {
-encontradas.add(encontrada);
-marcarEncontrada(a, b);
-const item = document.getElementById(palabra-${encontrada});
-if (item) item.style.textDecoration = "line-through";
-if (encontradas.size === palabras.length) {
-document.getElementById("mensaje").style.display = "block";
-}
-}
-}
+
 function marcarEncontrada(a, b) {
-const df = b.fila - a.fila;
-const dc = b.columna - a.columna;
-const pasoF = df === 0 ? 0 : df / Math.abs(df);
-const pasoC = dc === 0 ? 0 : dc / Math.abs(dc);
-const dist = Math.max(Math.abs(df), Math.abs(dc));
-for (let i = 0; i <= dist; i++) {
-let f = a.fila + pasoF * i;
-let c = a.columna + pasoC * i;
-let el = document.querySelector(.letra[data-fila="${f}"][data-columna="${c}"]);
-if (el) el.classList.add("encontrada");
+  const df = b.fila - a.fila;
+  const dc = b.columna - a.columna;
+
+  const pasoF = df === 0 ? 0 : df / Math.abs(df);
+  const pasoC = dc === 0 ? 0 : dc / Math.abs(dc);
+
+  const distancia = Math.max(
+    Math.abs(df),
+    Math.abs(dc)
+  );
+
+  for (let i = 0; i <= distancia; i++) {
+    const f = a.fila + pasoF * i;
+    const c = a.columna + pasoC * i;
+
+    const el = document.querySelector(
+      `.letra[data-fila="${f}"][data-columna="${c}"]`
+    );
+
+    if (el) {
+      el.classList.add("encontrada");
+    }
+  }
 }
-}
+
 const sopaEl = document.getElementById("sopa");
-sopaEl.addEventListener("mousedown", iniciarSeleccion);
-window.addEventListener("mousemove", moverSeleccion);
-window.addEventListener("mouseup", finalSeleccion);
-sopaEl.addEventListener("touchstart", iniciarSeleccion, { passive: false });
-window.addEventListener("touchmove", moverSeleccion, { passive: false });
-window.addEventListener("touchend", finalSeleccion);
+
+sopaEl.addEventListener(
+  "mousedown",
+  iniciarSeleccion
+);
+
+window.addEventListener(
+  "mousemove",
+  moverSeleccion
+);
+
+window.addEventListener(
+  "mouseup",
+  finalSeleccion
+);
+
+sopaEl.addEventListener(
+  "touchstart",
+  iniciarSeleccion,
+  { passive: false }
+);
+
+window.addEventListener(
+  "touchmove",
+  moverSeleccion,
+  { passive: false }
+);
+
+window.addEventListener(
+  "touchend",
+  finalSeleccion
+);
+
 nuevaPartida();
-</script>
 </body>
   </html>
