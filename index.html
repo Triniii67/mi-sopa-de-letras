@@ -3,82 +3,112 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Sopa de Letras</title>
+
+<title>Mi Sopa de Letras</title>
+
 <style>
 * {
-box-sizing: border-box;
-user-select: none;
--webkit-user-select: none;
+  box-sizing: border-box;
+  user-select: none;
+  -webkit-user-select: none;
 }
+
 body {
-font-family: Arial, sans-serif;
-text-align: center;
-background-color: #f4f4f9;
-margin: 0;
-padding: 10px;
-touch-action: none;
+  font-family: Arial, sans-serif;
+  text-align: center;
+  background: #f4f4f9;
+  margin: 0;
+  padding: 15px;
 }
-h1 { margin-bottom: 10px; }
+
+h1 {
+  margin: 10px 0 15px;
+  font-size: 28px;
+}
+
 #palabras {
-margin: 10px 0;
-font-weight: bold;
-font-size: 14px;
+  margin: 10px auto;
+  font-weight: bold;
+  font-size: 15px;
+  max-width: 500px;
+  line-height: 1.8;
 }
+
 .palabra-item {
-display: inline-block;
-margin: 2px 5px;
+  display: inline-block;
+  margin: 2px 6px;
 }
+
 #sopa {
-display: grid;
-grid-template-columns: repeat(10, 1fr);
-gap: 3px;
-max-width: 350px;
-margin: 10px auto;
-touch-action: none;
+  display: grid;
+  grid-template-columns: repeat(10, 1fr);
+  gap: 3px;
+  width: min(92vw, 400px);
+  margin: 15px auto;
+  touch-action: none;
 }
+
 .letra {
-aspect-ratio: 1;
-background: white;
-border: 1px solid #ccc;
-border-radius: 4px;
-display: flex;
-align-items: center;
-justify-content: center;
-font-weight: bold;
-font-size: 16px;
-cursor: pointer;
+  aspect-ratio: 1;
+  background: white;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  font-size: clamp(12px, 4vw, 18px);
 }
-.letra.seleccionada { background-color: #ffe066; }
-.letra.encontrada { background-color: #8ce99a; }
+
+.letra.seleccionada {
+  background: #ffe066;
+}
+
+.letra.encontrada {
+  background: #8ce99a;
+}
+
 #mensaje {
-display: none;
-font-size: 20px;
-color: green;
-font-weight: bold;
-margin-top: 15px;
+  display: none;
+  font-size: 22px;
+  color: green;
+  font-weight: bold;
+  margin: 15px;
 }
+
 button {
-padding: 10px 15px;
-font-size: 16px;
-background-color: #4caf50;
-color: white;
-border: none;
-border-radius: 5px;
-cursor: pointer;
-margin-top: 10px;
+  padding: 12px 18px;
+  font-size: 16px;
+  background: #4caf50;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
 }
 </style>
 </head>
+
 <body>
+
 <h1>🧩 Mi Sopa de Letras</h1>
+
 <div id="palabras"></div>
+
 <div id="sopa"></div>
-<div id="mensaje">¡Ganaste! 🎉</div>
-<button onclick="nuevaPartida()">✨ Jugar otra ronda ✨</button>
+
+<div id="mensaje">
+  ¡Ganaste! 🎉
+</div>
+
+<button onclick="nuevaPartida()">
+  ✨ Jugar otra ronda ✨
+</button>
+
 <script>
+
 const listaPalabras = [
   "TOPH",
-  "BEIFONG",
+  "BEIFONG"
   "ESTRELLA",
   "COMETA",
   "LUNA",
@@ -99,13 +129,16 @@ const TAMANO = 10;
 let palabras = [];
 let tablero = [];
 let encontradas = new Set();
+
 let inicio = null;
 let esPresionado = false;
 
+
+/* NUEVA PARTIDA */
+
 function nuevaPartida() {
+
   encontradas.clear();
-  inicio = null;
-  esPresionado = false;
 
   document.getElementById("mensaje").style.display = "none";
 
@@ -118,27 +151,31 @@ function nuevaPartida() {
   divPalabras.innerHTML =
     "Palabras: " +
     palabras
-      .map(
-        p =>
-          `<span class="palabra-item" id="palabra-${p}">${p}</span>`
+      .map(p =>
+        `<span class="palabra-item" id="palabra-${p}">${p}</span>`
       )
       .join(" | ");
 
-  tablero = Array.from(
-    { length: TAMANO },
-    () => Array(TAMANO).fill("")
-  );
+  tablero = Array(TAMANO)
+    .fill(null)
+    .map(() => Array(TAMANO).fill(""));
 
   colocarPalabras();
   rellenarVacios();
   dibujarTablero();
 }
 
+
+/* COLOCAR PALABRAS */
+
 function colocarPalabras() {
-  for (const palabra of palabras) {
+
+  for (let palabra of palabras) {
+
     let colocada = false;
 
     while (!colocada) {
+
       const dF = Math.floor(Math.random() * 3) - 1;
       const dC = Math.floor(Math.random() * 3) - 1;
 
@@ -148,8 +185,15 @@ function colocarPalabras() {
       const c = Math.floor(Math.random() * TAMANO);
 
       if (puedeColocar(palabra, f, c, dF, dC)) {
+
         for (let i = 0; i < palabra.length; i++) {
-          tablero[f + i * dF][c + i * dC] = palabra[i];
+
+          tablero[
+            f + i * dF
+          ][
+            c + i * dC
+          ] = palabra[i];
+
         }
 
         colocada = true;
@@ -158,9 +202,13 @@ function colocarPalabras() {
   }
 }
 
-function puedeColocar(palabra, f, c, dF, dC) {
-  const finF = f + (palabra.length - 1) * dF;
-  const finC = c + (palabra.length - 1) * dC;
+
+/* COMPROBAR SI CABE */
+
+function puedeColocar(p, f, c, dF, dC) {
+
+  const finF = f + (p.length - 1) * dF;
+  const finC = c + (p.length - 1) * dC;
 
   if (
     finF < 0 ||
@@ -171,10 +219,16 @@ function puedeColocar(palabra, f, c, dF, dC) {
     return false;
   }
 
-  for (let i = 0; i < palabra.length; i++) {
-    const celda = tablero[f + i * dF][c + i * dC];
+  for (let i = 0; i < p.length; i++) {
 
-    if (celda !== "" && celda !== palabra[i]) {
+    const celda =
+      tablero[
+        f + i * dF
+      ][
+        c + i * dC
+      ];
+
+    if (celda !== "" && celda !== p[i]) {
       return false;
     }
   }
@@ -182,61 +236,94 @@ function puedeColocar(palabra, f, c, dF, dC) {
   return true;
 }
 
+
+/* RELLENAR ESPACIOS */
+
 function rellenarVacios() {
+
   const letras = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
 
   for (let f = 0; f < TAMANO; f++) {
+
     for (let c = 0; c < TAMANO; c++) {
+
       if (tablero[f][c] === "") {
+
         tablero[f][c] =
-          letras[Math.floor(Math.random() * letras.length)];
+          letras[
+            Math.floor(
+              Math.random() * letras.length
+            )
+          ];
       }
     }
   }
 }
 
+
+/* DIBUJAR TABLERO */
+
 function dibujarTablero() {
+
   const sopa = document.getElementById("sopa");
 
   sopa.innerHTML = "";
 
   for (let f = 0; f < TAMANO; f++) {
+
     for (let c = 0; c < TAMANO; c++) {
+
       const div = document.createElement("div");
 
       div.className = "letra";
+
       div.dataset.fila = f;
       div.dataset.columna = c;
-      div.innerText = tablero[f][c];
+
+      div.textContent = tablero[f][c];
 
       sopa.appendChild(div);
     }
   }
 }
 
+
+/* OBTENER CELDA */
+
 function obtenerCoordenadas(e) {
-  let el = e.target;
 
-  if (e.touches && e.touches.length > 0) {
-    const touch = e.touches[0];
+  let elemento = e.target;
 
-    el = document.elementFromPoint(
-      touch.clientX,
-      touch.clientY
+  if (
+    e.touches &&
+    e.touches.length > 0
+  ) {
+
+    elemento = document.elementFromPoint(
+      e.touches[0].clientX,
+      e.touches[0].clientY
     );
   }
 
-  if (el && el.classList.contains("letra")) {
+  if (
+    elemento &&
+    elemento.classList.contains("letra")
+  ) {
+
     return {
-      fila: parseInt(el.dataset.fila),
-      columna: parseInt(el.dataset.columna)
+      fila: parseInt(elemento.dataset.fila),
+      columna: parseInt(elemento.dataset.columna)
     };
   }
 
   return null;
 }
 
+
+/* COMENZAR */
+
 function iniciarSeleccion(e) {
+
   e.preventDefault();
 
   const coords = obtenerCoordenadas(e);
@@ -244,13 +331,19 @@ function iniciarSeleccion(e) {
   if (!coords) return;
 
   esPresionado = true;
+
   inicio = coords;
 
   limpiarSeleccion();
+
   marcarTemporal(inicio, inicio);
 }
 
+
+/* MOVER */
+
 function moverSeleccion(e) {
+
   if (!esPresionado || !inicio) return;
 
   e.preventDefault();
@@ -258,28 +351,45 @@ function moverSeleccion(e) {
   const coords = obtenerCoordenadas(e);
 
   if (coords) {
+
     limpiarSeleccion();
-    marcarTemporal(inicio, coords);
+
+    marcarTemporal(
+      inicio,
+      coords
+    );
   }
 }
 
-function finalSeleccion(e) {
+
+/* TERMINAR */
+
+function finalizarSeleccion(e) {
+
   if (!esPresionado || !inicio) return;
 
   e.preventDefault();
 
   esPresionado = false;
 
-  const coords = obtenerCoordenadas(e) || inicio;
+  const coords =
+    obtenerCoordenadas(e) || inicio;
 
-  verificarPalabra(inicio, coords);
+  verificarPalabra(
+    inicio,
+    coords
+  );
 
   limpiarSeleccion();
 
   inicio = null;
 }
 
+
+/* MARCAR SELECCIÓN TEMPORAL */
+
 function marcarTemporal(a, b) {
+
   const df = b.fila - a.fila;
   const dc = b.columna - a.columna;
 
@@ -291,37 +401,55 @@ function marcarTemporal(a, b) {
     return;
   }
 
-  const pasoF = df === 0 ? 0 : df / Math.abs(df);
-  const pasoC = dc === 0 ? 0 : dc / Math.abs(dc);
+  const pasoF =
+    df === 0 ? 0 : df / Math.abs(df);
 
-  const distancia = Math.max(
-    Math.abs(df),
-    Math.abs(dc)
-  );
+  const pasoC =
+    dc === 0 ? 0 : dc / Math.abs(dc);
 
-  for (let i = 0; i <= distancia; i++) {
-    const f = a.fila + pasoF * i;
-    const c = a.columna + pasoC * i;
-
-    const el = document.querySelector(
-      `.letra[data-fila="${f}"][data-columna="${c}"]`
+  const distancia =
+    Math.max(
+      Math.abs(df),
+      Math.abs(dc)
     );
 
-    if (el) {
-      el.classList.add("seleccionada");
+  for (let i = 0; i <= distancia; i++) {
+
+    const f =
+      a.fila + pasoF * i;
+
+    const c =
+      a.columna + pasoC * i;
+
+    const elemento =
+      document.querySelector(
+        `.letra[data-fila="${f}"][data-columna="${c}"]`
+      );
+
+    if (elemento) {
+      elemento.classList.add("seleccionada");
     }
   }
 }
 
+
+/* LIMPIAR SELECCIÓN */
+
 function limpiarSeleccion() {
+
   document
     .querySelectorAll(".letra.seleccionada")
-    .forEach(el => {
-      el.classList.remove("seleccionada");
-    });
+    .forEach(
+      elemento =>
+        elemento.classList.remove("seleccionada")
+    );
 }
 
+
+/* COMPROBAR PALABRA */
+
 function verificarPalabra(a, b) {
+
   const df = b.fila - a.fila;
   const dc = b.columna - a.columna;
 
@@ -333,115 +461,28 @@ function verificarPalabra(a, b) {
     return;
   }
 
-  const pasoF = df === 0 ? 0 : df / Math.abs(df);
-  const pasoC = dc === 0 ? 0 : dc / Math.abs(dc);
+  const pasoF =
+    df === 0 ? 0 : df / Math.abs(df);
 
-  const distancia = Math.max(
-    Math.abs(df),
-    Math.abs(dc)
-  );
+  const pasoC =
+    dc === 0 ? 0 : dc / Math.abs(dc);
+
+  const distancia =
+    Math.max(
+      Math.abs(df),
+      Math.abs(dc)
+    );
 
   let texto = "";
 
   for (let i = 0; i <= distancia; i++) {
-    texto += tablero[
-      a.fila + pasoF * i
-    ][
-      a.columna + pasoC * i
-    ];
+
+    texto +=
+      tablero[
+        a.fila + pasoF * i
+      ][
+        a.columna + pasoC * i
+      ];
   }
 
-  const invertido = texto
-    .split("")
-    .reverse()
-    .join("");
-
-  const encontrada = palabras.find(
-    p =>
-      (p === texto || p === invertido) &&
-      !encontradas.has(p)
-  );
-
-  if (!encontrada) return;
-
-  encontradas.add(encontrada);
-
-  marcarEncontrada(a, b);
-
-  const item = document.getElementById(
-    `palabra-${encontrada}`
-  );
-
-  if (item) {
-    item.style.textDecoration = "line-through";
-  }
-
-  if (encontradas.size === palabras.length) {
-    document.getElementById("mensaje").style.display =
-      "block";
-  }
-}
-
-function marcarEncontrada(a, b) {
-  const df = b.fila - a.fila;
-  const dc = b.columna - a.columna;
-
-  const pasoF = df === 0 ? 0 : df / Math.abs(df);
-  const pasoC = dc === 0 ? 0 : dc / Math.abs(dc);
-
-  const distancia = Math.max(
-    Math.abs(df),
-    Math.abs(dc)
-  );
-
-  for (let i = 0; i <= distancia; i++) {
-    const f = a.fila + pasoF * i;
-    const c = a.columna + pasoC * i;
-
-    const el = document.querySelector(
-      `.letra[data-fila="${f}"][data-columna="${c}"]`
-    );
-
-    if (el) {
-      el.classList.add("encontrada");
-    }
-  }
-}
-
-const sopaEl = document.getElementById("sopa");
-
-sopaEl.addEventListener(
-  "mousedown",
-  iniciarSeleccion
-);
-
-window.addEventListener(
-  "mousemove",
-  moverSeleccion
-);
-
-window.addEventListener(
-  "mouseup",
-  finalSeleccion
-);
-
-sopaEl.addEventListener(
-  "touchstart",
-  iniciarSeleccion,
-  { passive: false }
-);
-
-window.addEventListener(
-  "touchmove",
-  moverSeleccion,
-  { passive: false }
-);
-
-window.addEventListener(
-  "touchend",
-  finalSeleccion
-);
-
-nuevaPartida();
-</body>
-  </html>
+ 
